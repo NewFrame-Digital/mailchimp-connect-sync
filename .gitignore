@@ -1,0 +1,13 @@
+# Real configs hold live API keys for clinic accounts. Only the example ships.
+config.json
+config.*.json
+!config.example.json
+
+.env
+.env.*
+
+# Per-clinic "when did this last run" bookkeeping.
+.sync-state.json
+
+node_modules/
+.DS_Store

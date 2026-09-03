@@ -1,0 +1,23 @@
+{
+  "clinics": [
+    {
+      "name": "Example Clinic",
+
+      "mailchimpApiKeyEnv": "EXAMPLE_MAILCHIMP_KEY",
+      "audienceId": "a1b2c3d4e5",
+
+      "ghlTokenEnv": "EXAMPLE_GHL_TOKEN",
+      "ghlLocationId": "paste the location id here",
+
+      "fieldMap": {
+        "LASTVISIT": { "key": "contact.last_visit_date", "type": "date" },
+        "VISITS": "contact.total_visits",
+        "SINCE": { "key": "contact.member_since", "type": "date" }
+      },
+
+      "tags": ["mailchimp-sync"],
+      "source": "Mailchimp sync",
+      "syncStatuses": ["subscribed", "transactional"]
+    }
+  ]
+}

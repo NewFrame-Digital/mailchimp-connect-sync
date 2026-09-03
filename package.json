@@ -1,0 +1,20 @@
+{
+  "name": "cliniverse-mailchimp-sync",
+  "version": "0.1.0",
+  "description": "Syncs Mailchimp contacts and their Jane-written merge fields into a GoHighLevel location. No dependencies, runs anywhere Node 18+ exists.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "mailchimp-sync": "src/cli.js"
+  },
+  "scripts": {
+    "inspect": "node src/cli.js inspect config.json",
+    "audiences": "node src/cli.js audiences config.json",
+    "dry": "node src/cli.js sync config.json --dry",
+    "sync": "node src/cli.js sync config.json",
+    "test": "node test/map.test.js && node test/optout.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
