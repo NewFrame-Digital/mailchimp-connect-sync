@@ -44,11 +44,60 @@ Shown once, same as the Mailchimp key.
 In Connect: Settings, Business Profile. A long string of letters and numbers.
 
 **`FIELD_MAP`**
-NewFrame provides this. Do not attempt to write one.
+You can build this with them, but only from real data. Never guess it.
 
-Mailchimp and GoHighLevel use different names for the same field, and nothing pairs them automatically. Getting it wrong fails silently: dates arrive as text, look fine in the interface, and every date-based filter and automation quietly stops matching. There is no error. That is why it comes from us rather than being guessed.
+Mailchimp and GoHighLevel use different names for the same field and nothing pairs them automatically. Guessing fails silently: dates arrive as text, look fine in the interface, and every date-based filter and automation stops matching, with no error anywhere.
 
-If they do not have theirs yet, tell them to ask NewFrame for it before going further.
+The repo has a command that prints both sides so you do not have to guess. Once they have the other four values:
+
+1. Create a `.env` in the repo root (it is gitignored, so their keys cannot be committed):
+
+```
+MAILCHIMP_API_KEY=their-key
+MAILCHIMP_AUDIENCE_ID=their-audience-id
+GHL_TOKEN=their-token
+GHL_LOCATION_ID=their-location-id
+```
+
+2. Write a `config.json` from `config.example.json`, referencing those variables by name rather than pasting values into it:
+
+```json
+{
+  "clinics": [
+    {
+      "name": "Their Clinic",
+      "mailchimpApiKeyEnv": "MAILCHIMP_API_KEY",
+      "audienceId": "their-audience-id",
+      "ghlTokenEnv": "GHL_TOKEN",
+      "ghlLocationId": "their-location-id",
+      "fieldMap": {}
+    }
+  ]
+}
+```
+
+3. Run `set -a && . ./.env && set +a && node src/cli.js inspect config.json`
+
+That prints their real Mailchimp merge tags beside their real GoHighLevel custom fields. Pair them by hand from that output. Mailchimp tag on the left, GoHighLevel field key on the right:
+
+```json
+{
+  "LVISITDATE": { "key": "contact.last_visit_date", "type": "date" },
+  "VISITS": "contact.number_of_visits"
+}
+```
+
+Rules when pairing:
+
+- **Mark every date field `"type": "date"`.** GoHighLevel wants `YYYY-MM-DD`. This is the silent failure above.
+- **Only map what belongs in a marketing CRM.** Some of what Jane writes to Mailchimp is clinical: intake notes, referral text naming family members or other practitioners, appointment descriptions. Leave those out. Anything not in the map is ignored. If a field looks borderline, ask them rather than deciding for them.
+- **Read the actual values, not just the field name.** A field can look like marketing data at the top and be free-text clinical detail underneath.
+
+4. Check it before it writes anything: `node src/cli.js sync config.json --dry`
+
+That prints exactly what it would send, contact by contact, without writing. Compare a few against what is already in GoHighLevel. Only once that looks right does the map go into Vercel as `FIELD_MAP`, on a single line.
+
+If they would rather not do this, NewFrame will write the map for them. Ask.
 
 ## Setup, in order
 
@@ -58,7 +107,7 @@ If they do not have theirs yet, tell them to ask NewFrame for it before going fu
 
    If they are running you from a local clone, check it is a clone of **their fork**, not of `NewFrame-Digital`. Cloning ours gives them these instructions but nothing Vercel can deploy. The clone is optional either way: it only puts the files on their machine, it is the fork that Vercel needs.
 4. **Import into Vercel**: Add New, Project, pick their fork, Import. Stop before deploying.
-5. **Add the five environment variables**, exactly as named above. `FIELD_MAP` goes in as a single line, braces included, no line breaks.
+5. **Add the five environment variables**, exactly as named above. `FIELD_MAP` goes in as a single line, braces included, no line breaks. If you built the map locally, it is the `fieldMap` object from their `config.json`, flattened to one line.
 6. **Deploy.**
 7. **First run**: the schedule is daily, so rather than waiting, open the Cron Jobs tab and trigger it once by hand. Then read the Logs tab.
 8. **Turn off their old Mailchimp Zap** in Zapier, once the run looks right. Leaving it on means two systems doing identical work and their Zapier tasks still being spent.
