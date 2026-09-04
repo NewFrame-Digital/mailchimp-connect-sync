@@ -44,7 +44,15 @@ You cannot fetch any of these for them. You do not have access to their Mailchim
 Mailchimp, click their avatar, Account & Billing, Extras, API keys, Create A Key. It is shown once, so copy it before leaving the page. It ends in a datacenter suffix like `-us21`, and that suffix matters, it tells the code which Mailchimp server to call.
 
 **`MAILCHIMP_AUDIENCE_ID`**
-Mailchimp, Audience, All contacts, Settings, Audience name and defaults. A short string, roughly ten characters.
+Do not send them looking for this. Once the API key is in `.env`, run:
+
+```
+set -a && . ./.env && set +a && node src/cli.js audiences config.json
+```
+
+That lists their audiences with IDs and member counts. Most clinics have one. If there are several, ask which is the patient list rather than guessing. Fill it into `.env` and `config.json` yourself.
+
+(Needs a `config.json` to exist first, even with `audienceId` empty. Write a stub from `config.example.json` before running it.)
 
 **`GHL_TOKEN`**
 In Connect: Settings, Private Integrations, Create new integration. Exactly two permissions:
@@ -56,7 +64,7 @@ Shown once, same as the Mailchimp key.
 In Connect: Settings, Business Profile. A long string of letters and numbers.
 
 **`FIELD_MAP`**
-You can build this with them, but only from real data. Never guess it.
+You build this. Not from guesswork, from what the two accounts actually contain.
 
 Mailchimp and GoHighLevel use different names for the same field and nothing pairs them automatically. Guessing fails silently: dates arrive as text, look fine in the interface, and every date-based filter and automation stops matching, with no error anywhere.
 
@@ -131,7 +139,7 @@ Rules when pairing:
 
 That prints exactly what it would send, contact by contact, without writing. Compare a few against what is already in GoHighLevel. Only once that looks right does the map go into Vercel as `FIELD_MAP`, on a single line.
 
-If they would rather not do this, NewFrame will write the map for them. Ask.
+This is the whole job and you can do all of it. There is nothing to wait on us for.
 
 ## Setup, in order
 
