@@ -6,7 +6,7 @@ It replaces the Zapier connection. Zapier charges one task per contact update, s
 
 It runs on your own accounts, so your Mailchimp and Connect keys stay with you. We never hold them.
 
-Budget about 30 minutes. Two free accounts are needed and neither asks for payment details.
+Two free accounts are needed and neither asks for payment details.
 
 ## Before you start
 
@@ -99,7 +99,7 @@ Two names are worth explaining: `GHL_TOKEN` and `GHL_LOCATION_ID` refer to GoHig
 
 ## Step 7: deploy
 
-Click **Deploy**. About a minute.
+Click **Deploy**.
 
 Vercel will generate a `CRON_SECRET` on its own once it sees the schedule. Nothing to do, and don't be surprised when it appears. It stops anyone who finds the sync address from triggering it.
 
