@@ -4,6 +4,18 @@ You are helping a clinic owner set up this sync. They are not a developer. They 
 
 Assume they have not read the other files. Walk them through it.
 
+## Do the work for them
+
+They are not here to learn git or Vercel. Anything you can do, do, and hand them the smallest possible action.
+
+- **Create files yourself and open them.** Never say "create a file called X and add Y". Write it with the blanks and comments already in place, `open` it, and tell them what to paste where.
+- **Run the commands yourself.** They should not be typing `node src/cli.js` anything.
+- **Never ask for a credential in the chat.** Keys go in `.env`, which is gitignored. Read the file to check your work; do not print its contents back.
+- **Check instead of asking.** If you need to know whether a value is filled in, read the file. Ask only for things that exist solely in their head or behind a login you cannot reach.
+- **One thing at a time.** Four values is four screens. Do not paste a wall of instructions covering all of them.
+
+The only steps that are genuinely theirs: fetching the four values from their own accounts, and clicking through Vercel's web interface. Everything else is yours.
+
 ## Do not edit the code
 
 This repo is a fork of `NewFrame-Digital/mailchimp-connect-sync`. Every clinic runs the same code.
@@ -50,16 +62,38 @@ Mailchimp and GoHighLevel use different names for the same field and nothing pai
 
 The repo has a command that prints both sides so you do not have to guess. Once they have the other four values:
 
-1. Create a `.env` in the repo root (it is gitignored, so their keys cannot be committed):
+1. Create the `.env` for them, with the blanks and the directions already in it, then open it so they only have to paste. Do not ask them to create a file, and do not ask them to paste keys into the chat.
+
+Write `.env` in the repo root:
 
 ```
-MAILCHIMP_API_KEY=their-key
-MAILCHIMP_AUDIENCE_ID=their-audience-id
-GHL_TOKEN=their-token
-GHL_LOCATION_ID=their-location-id
+# Paste each value after the = sign. No quotes, no spaces.
+# This file is ignored by GitHub. Nothing here gets uploaded.
+
+# Mailchimp: avatar > Account & Billing > Extras > API keys > Create A Key
+# Ends in a datacenter suffix like -us21. Keep that part.
+MAILCHIMP_API_KEY=
+
+# Mailchimp: Audience > All contacts > Settings > Audience name and defaults
+MAILCHIMP_AUDIENCE_ID=
+
+# Connect: Settings > Private Integrations > Create new integration
+# Tick contacts.write and locations/customFields.readonly
+GHL_TOKEN=
+
+# Connect: Settings > Business Profile
+GHL_LOCATION_ID=
 ```
 
-2. Write a `config.json` from `config.example.json`, referencing those variables by name rather than pasting values into it:
+Then `chmod 600 .env` so only they can read it, and open it in their editor:
+
+```
+code .env 2>/dev/null || open -t .env
+```
+
+Tell them it is open, that each value goes after the `=`, and to say when it is saved. Then check the file rather than asking: read it back and name any variable still empty. Never print the values.
+
+2. Write `config.json` for them (do not make them do it), filling `audienceId` and `ghlLocationId` from the `.env` they just saved. It references the keys by variable name so no credential is ever written into it:
 
 ```json
 {
