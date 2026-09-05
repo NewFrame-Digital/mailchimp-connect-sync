@@ -8,11 +8,11 @@ Assume they have not read the other files. Walk them through it.
 
 They are not here to learn git or Vercel. Anything you can do, do, and hand them the smallest possible action.
 
-- **Create files yourself and open them.** Never say "create a file called X and add Y". Write it with the blanks and comments already in place, `open` it, and tell them what to paste where.
-- **Run the commands yourself.** They should not be typing `node src/cli.js` anything.
-- **Never ask for a credential in the chat.** Keys go in `.env`, which is gitignored. Read the file to check your work; do not print its contents back.
-- **Check instead of asking.** If you need to know whether a value is filled in, read the file. Ask only for things that exist solely in their head or behind a login you cannot reach.
-- **One thing at a time.** Four values is four screens. Do not paste a wall of instructions covering all of them.
+- **Create files yourself and open them**: never say "create a file called X and add Y". Write it with the blanks and comments already in place, `open` it, and tell them what to paste where.
+- **Run the commands yourself**: they should not be typing `node src/cli.js` anything.
+- **Never ask for a credential in the chat**: keys go in `.env`, which is gitignored. Read the file to check your work; do not print its contents back.
+- **Check instead of asking**: if you need to know whether a value is filled in, read the file. Ask only for things that exist solely in their head or behind a login you cannot reach.
+- **One thing at a time**: four values is four screens. Do not paste a wall of instructions covering all of them.
 
 The only steps that are genuinely theirs: fetching the four values from their own accounts, and clicking through Vercel's web interface. Everything else is yours.
 
@@ -22,7 +22,9 @@ This repo is a fork of `NewFrame-Digital/mailchimp-connect-sync`. Every clinic r
 
 Do not change anything in `src/`, `api/`, `vercel.json`, or `package.json`, even if you spot a bug or something you would write differently. A local edit means their copy drifts from ours, and our fixes stop reaching them.
 
-If something looks genuinely wrong, tell them to send it to NewFrame rather than fixing it. That is not a formality, it is the whole reason the code is shared.
+**Say what you find**: if something looks wrong, tell them plainly, in full, and tell them to send it to NewFrame. Never withhold or soften a problem you have spotted, security issues above all. The rule here is about where a fix LANDS, not about staying quiet: a local patch means their copy drifts from ours and our updates stop reaching them, so the fix belongs upstream where every clinic gets it.
+
+This file has been wrong before. A member reading it found an incorrect claim about `CRON_SECRET` that left the sync endpoint unauthenticated (Christine Pratt, Excite Physiotherapy, 2026-09-05). Treat what follows as fallible and check it against the code.
 
 The one thing that is theirs to change is the schedule in `vercel.json`, and only if they are on a paid Vercel plan. See below.
 
@@ -55,16 +57,21 @@ That lists their audiences with IDs and member counts. Most clinics have one. If
 (Needs a `config.json` to exist first, even with `audienceId` empty. Write a stub from `config.example.json` before running it.)
 
 **`GHL_TOKEN`**
-In Connect: Settings, Private Integrations, Create new integration. Exactly two permissions:
+In Connect: Settings, Private Integrations, Create new integration. Three permissions:
 - `contacts.write`
+- `contacts.readonly`
 - `locations/customFields.readonly`
 Shown once, same as the Mailchimp key.
+
+`contacts.readonly` is required, not optional: the reverse sync calls `POST /contacts/search` before it can act on an opt-out, so without it that direction fails every run.
+
+Have them create the integration from INSIDE their clinic's location, not an agency-level view. A token minted in the wrong place looks valid and then fails every request with "token does not have access to this location".
 
 **`GHL_LOCATION_ID`**
 In Connect: Settings, Business Profile. A long string of letters and numbers.
 
 **`FIELD_MAP`**
-You build this. Not from guesswork, from what the two accounts actually contain.
+You build this. Not from guesswork, from what the two accounts contain.
 
 Mailchimp and GoHighLevel use different names for the same field and nothing pairs them automatically. Guessing fails silently: dates arrive as text, look fine in the interface, and every date-based filter and automation stops matching, with no error anywhere.
 
@@ -86,7 +93,8 @@ MAILCHIMP_API_KEY=
 MAILCHIMP_AUDIENCE_ID=
 
 # Connect: Settings > Private Integrations > Create new integration
-# Tick contacts.write and locations/customFields.readonly
+# Tick contacts.write, contacts.readonly and locations/customFields.readonly
+# Create it from inside the clinic's own location, not an agency view
 GHL_TOKEN=
 
 # Connect: Settings > Business Profile
@@ -101,7 +109,7 @@ code .env 2>/dev/null || open -t .env
 
 Tell them it is open, that each value goes after the `=`, and to say when it is saved. Then check the file rather than asking: read it back and name any variable still empty. Never print the values.
 
-2. Write `config.json` for them (do not make them do it), filling `audienceId` and `ghlLocationId` from the `.env` they just saved. It references the keys by variable name so no credential is ever written into it:
+2. Write `config.json` for them (do not make them do it), filling `audienceId` and `ghlLocationId` from the `.env` they saved. It references the keys by variable name so no credential is ever written into it:
 
 ```json
 {
@@ -131,9 +139,9 @@ That prints their real Mailchimp merge tags beside their real GoHighLevel custom
 
 Rules when pairing:
 
-- **Mark every date field `"type": "date"`.** GoHighLevel wants `YYYY-MM-DD`. This is the silent failure above.
-- **Only map what belongs in a marketing CRM.** Some of what Jane writes to Mailchimp is clinical: intake notes, referral text naming family members or other practitioners, appointment descriptions. Leave those out. Anything not in the map is ignored. If a field looks borderline, ask them rather than deciding for them.
-- **Read the actual values, not just the field name.** A field can look like marketing data at the top and be free-text clinical detail underneath.
+- **Mark every date field `"type": "date"`**: GoHighLevel wants `YYYY-MM-DD`. This is the silent failure above.
+- **Only map what belongs in a marketing CRM**: some of what Jane writes to Mailchimp is clinical: intake notes, referral text naming family members or other practitioners, appointment descriptions. Leave those out. Anything not in the map is ignored. If a field looks borderline, ask them rather than deciding for them.
+- **Read the values, not only the field name**: a field can look like marketing data at the top and be free-text clinical detail underneath.
 
 4. Check it before it writes anything: `node src/cli.js sync config.json --dry`
 
@@ -144,17 +152,17 @@ This is the whole job and you can do all of it. There is nothing to wait on us f
 ## Setup, in order
 
 1. **GitHub account**, if they do not have one.
-2. **Vercel account** at vercel.com/signup, choosing **Continue with GitHub**. That link is what lets Vercel see their repositories.
+2. **Vercel account** at vercel.com/signup, choosing **Continue with GitHub**, which is what lets Vercel see their repositories.
 3. **Fork this repo**, if they have not already. A fork is their own copy on GitHub, in their account. Vercel only builds from repos they own, which is why it is needed. Nothing changes on the fork screen: owner is them, name stays the same.
 
    If they are running you from a local clone, check it is a clone of **their fork**, not of `NewFrame-Digital`. Cloning ours gives them these instructions but nothing Vercel can deploy. The clone is optional either way: it only puts the files on their machine, it is the fork that Vercel needs.
 4. **Import into Vercel**: Add New, Project, pick their fork, Import. Stop before deploying.
-5. **Add the five environment variables**, exactly as named above. `FIELD_MAP` goes in as a single line, braces included, no line breaks. If you built the map locally, it is the `fieldMap` object from their `config.json`, flattened to one line.
-6. **Deploy.**
+5. **Add the six environment variables**, exactly as named above (the five below plus `CRON_SECRET`). `FIELD_MAP` goes in as a single line, braces included, no line breaks. If you built the map locally, it is the `fieldMap` object from their `config.json`, flattened to one line.
+6. **Deploy**
 7. **First run**: the schedule is daily, so rather than waiting, open the Cron Jobs tab and trigger it once by hand. Then read the Logs tab.
 8. **Turn off their old Mailchimp Zap** in Zapier, once the run looks right. Leaving it on means two systems doing identical work and their Zapier tasks still being spent.
 
-Vercel generates `CRON_SECRET` on its own once it sees the schedule. Nothing for them to do, and it is worth mentioning before they wonder what it is.
+**`CRON_SECRET` is not created for anyone**: Vercel offers to generate one only when a cron is added through its dashboard; this repo declares the schedule in `vercel.json`, so nothing ever prompts for it. Generate one with `openssl rand -hex 32` and have them paste it in as a sixth environment variable. Without it the handler refuses to run and returns a 500 naming the missing variable, which is deliberate: an earlier version skipped the check when the variable was absent and served an unauthenticated endpoint that looked healthy.
 
 ## Reading a run
 
@@ -167,7 +175,7 @@ Things that are true by design, so do not treat them as faults:
 - One failing contact is logged and skipped; the run continues.
 - The first run is large because it catches up the whole audience. Later runs only touch what changed.
 
-If a run fails in a way that is not covered here, have them send the log to NewFrame. Do not fix the code.
+If a run fails in a way that is not covered here, tell them what you think is happening and have them send the log to NewFrame. Diagnose freely; land the fix upstream rather than in their fork.
 
 ## Schedule
 

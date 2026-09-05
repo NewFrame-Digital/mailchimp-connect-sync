@@ -16,7 +16,7 @@ You need four things from the clinic:
 
 1. Mailchimp API key (Account > Extras > API keys)
 2. Mailchimp audience ID (`npm run audiences` will list them once you have the key)
-3. GHL private integration token with `contacts.write` and `locations/customFields.readonly`
+3. GHL private integration token with `contacts.write`, `contacts.readonly` and `locations/customFields.readonly`, created from inside the clinic's own location. `contacts.readonly` is what the reverse sync needs, since it searches contacts before acting on an opt-out; an agency-level token looks valid and then fails every request with "token does not have access to this location"
 4. GHL location ID
 
 Copy `config.example.json` to `config.json` and fill it in. Credentials can be inlined for a local run, but referencing env var names via `mailchimpApiKeyEnv` / `ghlTokenEnv` is better, and required if this is ever hosted. `config.json` is gitignored either way.
@@ -29,7 +29,7 @@ node src/cli.js inspect config.json
 
 This prints the clinic's real Mailchimp merge tags beside their real GHL custom fields. Pair them by hand in `fieldMap`. The two systems don't agree on names and nothing matches them automatically, so this is the step that decides whether the sync is correct.
 
-Mark date fields with `{ "key": "...", "type": "date" }`. GHL wants `YYYY-MM-DD`, and Jane commonly writes `MM/DD/YYYY`. Unmarked dates land as text and every date filter in GHL quietly stops working.
+Mark date fields with `{ "key": "...", "type": "date" }`. GHL wants `YYYY-MM-DD`, and Jane commonly writes `MM/DD/YYYY`. Unmarked dates land as text and every date filter in GHL stops working with no error to tell you.
 
 ### Dry run before writing anything
 
@@ -47,7 +47,7 @@ node src/cli.js sync config.json
 
 ## Scheduling
 
-Two ways to run it, and the code is the same either way.
+Two ways to run it, and the code is the same either way. (Member-facing copy of this code: `NewFrame-Digital/mailchimp-connect-sync`, kept in sync by hand.)
 
 **On Vercel (what a clinic uses).** `api/sync.js` is a cron endpoint and `vercel.json` sets the schedule. Config comes from environment variables instead of `config.json`, because a serverless filesystem is read-only and discarded after each run:
 
@@ -59,7 +59,7 @@ Two ways to run it, and the code is the same either way.
 | `GHL_LOCATION_ID` | |
 | `FIELD_MAP` | the `fieldMap` object, as a JSON string |
 | `LOOKBACK_MINUTES` | optional, default 2880 (2 days) |
-| `CRON_SECRET` | set by Vercel; the handler rejects requests without it |
+| `CRON_SECRET` | **you generate this** (`openssl rand -hex 32`); the handler refuses to run without it |
 
 There is no last-run state file on Vercel. Instead the handler asks Mailchimp for anything changed in the last `LOOKBACK_MINUTES`. **This must be longer than the gap between runs**, or each run silently misses everything that changed in between. The default of 2880 (two days) suits the daily cron with a day of slack, so a skipped or failed run is covered by the next one. Re-sending an unchanged contact is a no-op because upsert is idempotent, so erring wide costs nothing.
 
@@ -67,7 +67,7 @@ There is no last-run state file on Vercel. Instead the handler asks Mailchimp fo
 
 **Locally (what we use for testing).** The CLI reads `config.json` and tracks a last-run watermark in `.sync-state.json`, so it only fetches what changed since the previous run.
 
-See `SETUP.md` for the setup walkthrough.
+See `SETUP.md` for the client-facing walkthrough.
 
 ## Safety behaviour worth knowing
 

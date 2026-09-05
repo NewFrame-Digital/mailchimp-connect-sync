@@ -39,12 +39,19 @@ Collect these before touching Vercel, because the next step asks for all of them
 
 **Mailchimp audience ID**: Audience > All contacts > Settings > Audience name and defaults. It's the "Audience ID", a short string like `a1b2c3d4e5`.
 
-**Connect private integration token**: in Connect, Settings > Private Integrations > Create new integration. It needs exactly two permissions:
+**Connect private integration token**: in Connect, Settings > Private Integrations > Create new integration. It needs three permissions:
 
 - `contacts.write`
+- `contacts.readonly`
 - `locations/customFields.readonly`
 
 Copy the token when shown.
+
+Two things that will waste your afternoon if you miss them:
+
+**Create it from inside your clinic's location**, not from an agency-level view. A token made in the wrong place looks perfectly valid and then fails on every request with "token does not have access to this location". Check you're inside your own clinic before you click Create.
+
+**`contacts.readonly` is not optional**: it reads like a nice-to-have next to `contacts.write`, but the unsubscribe direction searches your contacts before it can act, so without it that half of the sync fails on every run.
 
 **Connect location ID**: Settings > Business Profile, or read it out of the browser address bar when you're inside your account. A long string of letters and numbers.
 
@@ -92,16 +99,17 @@ Vercel calls these Environment Variables, and they live in your account rather t
 | `GHL_TOKEN` | your Connect private integration token |
 | `GHL_LOCATION_ID` | your Connect location ID |
 | `FIELD_MAP` | your field map, pasted as one line |
+| `CRON_SECRET` | a long random string you generate, see below |
 
 `FIELD_MAP` has to be a single line with no line breaks. Paste the whole `{...}` block including the braces.
+
+`CRON_SECRET` is the password that stops anyone who finds your sync address from triggering it. Nothing creates this for you, so generate one in a terminal with `openssl rand -hex 32` and paste the output in as the value. Any long random string works. The sync refuses to run until it's set.
 
 Two names are worth explaining: `GHL_TOKEN` and `GHL_LOCATION_ID` refer to GoHighLevel, the platform Connect is built on. If you go looking in the Connect settings for something labelled GoHighLevel you won't find it, those are the variable names, and the values come from your Connect account as described above.
 
 ## Step 7: deploy
 
 Click **Deploy**.
-
-Vercel will generate a `CRON_SECRET` on its own once it sees the schedule. Nothing to do, and don't be surprised when it appears. It stops anyone who finds the sync address from triggering it.
 
 ## Step 8: check the first run, then turn off the Zap
 

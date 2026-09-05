@@ -43,14 +43,26 @@ function clinicFromEnv() {
 }
 
 export default async function handler(req, res) {
-  // Vercel signs cron requests with CRON_SECRET. Without this check the URL is
-  // public and anyone could trigger a sync.
+  // Vercel sends `Authorization: Bearer $CRON_SECRET` on cron requests, but ONLY
+  // when that variable exists. It is not created for you: Vercel offers to
+  // generate one when you add a cron through its dashboard, and this repo
+  // declares the schedule in vercel.json instead, so nothing ever prompts you.
+  //
+  // So refuse to run without it. The earlier version skipped the check when the
+  // variable was missing, which is the wrong way to fail: a deployment that
+  // never set CRON_SECRET served an unauthenticated endpoint that anyone who
+  // found the URL could trigger, and it looked healthy while doing it.
+  // (Reported by Christine Pratt, Excite Physiotherapy, 2026-09-05.)
   const secret = process.env.CRON_SECRET
-  if (secret) {
-    const auth = req.headers.authorization
-    if (auth !== `Bearer ${secret}`) {
-      return res.status(401).json({ error: 'unauthorized' })
-    }
+  if (!secret) {
+    console.error('CRON_SECRET is not set. Refusing to run: see SETUP.md.')
+    return res.status(500).json({
+      error: 'CRON_SECRET is not set',
+      fix: 'Add a CRON_SECRET environment variable in Vercel, then redeploy. See SETUP.md.',
+    })
+  }
+  if (req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'unauthorized' })
   }
 
   const lines = []
